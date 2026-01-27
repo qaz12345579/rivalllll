@@ -1,0 +1,108 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "qaz123",
+   LoadingTitle = "Shadow Hub Loading...",
+   LoadingSubtitle = "by shadoww7",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "ShadowHub",
+      FileName = "Rivals"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvitelink",
+      RememberJoins = true
+   },
+   KeySystem = false
+})
+
+-- Variables
+local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- Tabs
+local MainTab = Window:CreateTab("Main", 4483362458)
+local VisualsTab = Window:CreateTab("Visuals", 4483362458)
+local MiscTab = Window:CreateTab("Misc", 4483362458)
+
+-- Main Section
+local MainSection = MainTab:CreateSection("Combat")
+
+MainTab:CreateToggle({
+   Name = "Silent Aim",
+   CurrentValue = false,
+   Flag = "SilentAim",
+   Callback = function(Value)
+       _G.SilentAim = Value
+   end,
+})
+
+MainTab:CreateToggle({
+   Name = "Aimbot",
+   CurrentValue = false,
+   Flag = "Aimbot",
+   Callback = function(Value)
+       _G.Aimbot = Value
+   end,
+})
+
+-- Visuals Section
+local VisualsSection = VisualsTab:CreateSection("ESP")
+
+VisualsTab:CreateToggle({
+   Name = "ESP Boxes",
+   CurrentValue = false,
+   Flag = "ESPBoxes",
+   Callback = function(Value)
+       _G.ESPBoxes = Value
+   end,
+})
+
+VisualsTab:CreateToggle({
+   Name = "ESP Names",
+   CurrentValue = false,
+   Flag = "ESPNames",
+   Callback = function(Value)
+       _G.ESPNames = Value
+   end,
+})
+
+-- Misc Section
+local MiscSection = MiscTab:CreateSection("Movement")
+
+MiscTab:CreateSlider({
+   Name = "Walkspeed",
+   Range = {16, 200},
+   Increment = 1,
+   Suffix = "Speed",
+   CurrentValue = 16,
+   Flag = "WalkspeedSlider",
+   Callback = function(Value)
+       Humanoid.WalkSpeed = Value
+   end,
+})
+
+MiscTab:CreateSlider({
+   Name = "JumpPower",
+   Range = {50, 500},
+   Increment = 1,
+   Suffix = "Power",
+   CurrentValue = 50,
+   Flag = "JumpPowerSlider",
+   Callback = function(Value)
+       Humanoid.JumpPower = Value
+   end,
+})
+
+MiscTab:CreateButton({
+   Name = "Infinite Jump",
+   Callback = function()
+       game:GetService("UserInputService").JumpRequest:Connect(function()
+           Humanoid:ChangeState("Jumping")
+       end)
+   end,
+})
+
+Rayfield:LoadConfiguration()
