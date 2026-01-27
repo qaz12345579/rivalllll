@@ -1,0 +1,92 @@
+-- [[ RIVALS SOLIX STYLE LOADER ]]
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/7Lib/7Lib/main/7Lib.lua"))()
+local Window = Library:CreateWindow("RIVALS SOLIX V2", "Mobile Optimized", Color3.fromRGB(255, 0, 0))
+
+local Tab = Window:CreateTab("Main")
+local Visuals = Window:CreateTab("Visuals")
+
+local CFG = {
+    AIM = false,
+    RAPID = false,
+    ESP = false
+}
+
+-- [ COMBAT FUNCTIONS ]
+Tab:CreateToggle("Silent Aim", function(state)
+    CFG.AIM = state
+end)
+
+Tab:CreateToggle("Rapid Fire", function(state)
+    CFG.RAPID = state
+end)
+
+-- [ VISUAL FUNCTIONS ]
+Visuals:CreateToggle("Player ESP", function(state)
+    CFG.ESP = state
+end)
+
+-- [ CORE LOGIC ]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local function GetTarget()
+    local t = nil
+    local d = 500
+    local c = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local pt = p.Character.Head
+            local pos, vis = Camera:WorldToViewportPoint(pt.Position)
+            if vis then
+                local m = (Vector2.new(pos.X, pos.Y) - c).Magnitude
+                if m < d then t = pt d = m end
+            end
+        end
+    end
+    return t
+end
+
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    if CFG.AIM and (method == "Raycast" or method == "FindPartOnRay") then
+        local target = GetTarget()
+        if target then
+            return target, target.Position, target.CFrame.LookVector, target.Material
+        end
+    end
+    
+    if CFG.RAPID and method == "FireServer" and self.Name == "Shoot" then
+        task.spawn(function()
+            for i = 1, 2 do old(self, unpack(args)) end
+        end)
+    end
+    return old(self, ...)
+end)
+setreadonly(mt, true)
+
+-- [ ESP LOOP ]
+RunService.RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hl = p.Character:FindFirstChild("Highlight")
+            if CFG.ESP then
+                if not hl then
+                    hl = Instance.new("Highlight", p.Character)
+                    hl.FillColor = Color3.new(1, 0, 0)
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+            else
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+end)
+
