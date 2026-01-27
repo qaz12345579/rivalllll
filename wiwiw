@@ -1,0 +1,76 @@
+-- [[ RIVALS SCRIPTBLOX STYLE - FULL ENGLISH ]]
+-- [[ NO KEY - NO MENU - AUTO ACTIVATE ]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+-- Configuration (Scriptblox standard)
+local SETTINGS = {
+    AIM_ENABLED = true,
+    AIM_FOV = 400,
+    ESP_ENABLED = true,
+    SMOOTHNESS = 0.5
+}
+
+-- [ Target Function ]
+local function GetClosestTarget()
+    local target, dist = nil, SETTINGS.AIM_FOV
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+            if vis then
+                local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                if mag < dist then
+                    target = p.Character.Head
+                    dist = mag
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- [ Scriptblox Logic: Bullet Redirection ]
+local old; old = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if SETTINGS.AIM_ENABLED and (method == "FindPartOnRay" or method == "Raycast") then
+        local t = GetClosestTarget()
+        if t then
+            -- This part is "borrowed" from high-end Scriptblox sources
+            -- It forces the ray to hit the head directly
+            return t, t.Position, t.CFrame.LookVector, t.Material
+        end
+    end
+    return old(self, ...)
+end)
+
+-- [ Visuals: Highlight ESP ]
+RunService.RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local h = p.Character:FindFirstChild("SolixHighlight")
+            if SETTINGS.ESP_ENABLED then
+                if not h then
+                    h = Instance.new("Highlight")
+                    h.Name = "SolixHighlight"
+                    h.Parent = p.Character
+                    h.FillColor = Color3.fromRGB(0, 255, 255) -- Cyan Blue
+                    h.OutlineColor = Color3.new(1, 1, 1)
+                    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+            elseif h then
+                h:Destroy()
+            end
+        end
+    end
+end)
+
+print("Scriptblox Bypass Loaded - No Korean")
+
