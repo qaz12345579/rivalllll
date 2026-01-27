@@ -1,0 +1,92 @@
+-- [[ KICAHOOK V2 FOR DELTA - FULL ENGLISH ]]
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Stefanuk12/Venyx-UI-Library/main/source.lua"))()
+local Venyx = Library.new("KICA V2", 5013109572)
+
+-- [ Setup Pages ]
+local Main = Venyx:addPage("Main", 5012544693)
+local Combat = Main:addSection("Combat")
+local Visuals = Main:addSection("Visuals")
+
+local CFG = {
+    AIM = false,
+    RAPID = false,
+    ESP = false
+}
+
+-- [ Combat Features ]
+Combat:addToggle("Silent Aim", nil, function(state)
+    CFG.AIM = state
+end)
+
+Combat:addToggle("Rapid Fire", nil, function(state)
+    CFG.RAPID = state
+end)
+
+-- [ Visual Features ]
+Visuals:addToggle("Player ESP", nil, function(state)
+    CFG.ESP = state
+end)
+
+-- [ Core Script Logic ]
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local function GetClosestTarget()
+    local target, dist = nil, 500
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+            if vis then
+                local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                if mag < dist then
+                    target = p.Character.Head
+                    dist = mag
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- [ Hooking System ]
+local old; old = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    if CFG.AIM and (method == "Raycast" or method == "FindPartOnRay") then
+        local t = GetClosestTarget()
+        if t then 
+            return t, t.Position, t.CFrame.LookVector, t.Material 
+        end
+    end
+    
+    if CFG.RAPID and method == "FireServer" and self.Name == "Shoot" then
+        task.spawn(function()
+            for i = 1, 2 do old(self, unpack(args)) end
+        end)
+    end
+    
+    return old(self, ...)
+end)
+
+-- [ ESP Render Loop ]
+game:GetService("RunService").RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local h = p.Character:FindFirstChild("Highlight")
+            if CFG.ESP then
+                if not h then
+                    h = Instance.new("Highlight", p.Character)
+                    h.FillColor = Color3.new(1, 0, 0)
+                    h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+            elseif h then 
+                h:Destroy() 
+            end
+        end
+    end
+end)
+
