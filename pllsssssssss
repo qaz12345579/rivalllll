@@ -1,0 +1,80 @@
+-- [[ RIVALS DELTA MOBILE FINAL - NO MENU ]]
+-- [[ ALL FEATURES ENABLED BY DEFAULT ]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Configuration
+local Settings = {
+    SilentAim = true,
+    RapidFire = true,
+    ESP = true,
+    FOV = 600
+}
+
+-- Target Finder Logic
+local function GetClosestTarget()
+    local target, closestDist = nil, Settings.FOV
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local pos, vis = Camera:WorldToViewportPoint(p.Character.Head.Position)
+            if vis then
+                local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                if mag < closestDist then
+                    target = p.Character.Head
+                    closestDist = mag
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- Delta Hooking System
+local oldNamecall; oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    -- Silent Aim Redirection
+    if Settings.SilentAim and (method == "Raycast" or method == "FindPartOnRay") then
+        local t = GetClosestTarget()
+        if t then
+            return t, t.Position, t.CFrame.LookVector, t.Material
+        end
+    end
+
+    -- Rapid Fire Sync
+    if Settings.RapidFire and method == "FireServer" and self.Name == "Shoot" then
+        task.spawn(function()
+            for i = 1, 2 do 
+                oldNamecall(self, unpack(args))
+            end
+        end)
+    end
+
+    return oldNamecall(self, ...)
+end)
+
+-- Optimized ESP Loop
+RunService.RenderStepped:Connect(function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local highlight = p.Character:FindFirstChild("Highlight")
+            if Settings.ESP then
+                if not highlight then
+                    highlight = Instance.new("Highlight", p.Character)
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+            elseif highlight then
+                highlight:Destroy()
+            end
+        end
+    end
+end)
+
+print("Delta Rivals Script: Loaded Successfully")
