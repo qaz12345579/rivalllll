@@ -1,0 +1,68 @@
+-- [[ QAZ12345 MOBILE OPTIMIZED ]]
+-- [[ NO SILENT AIM - ONLY TROLL & DEFENSE ]]
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("qaz12345 - MOBILE", "Midnight")
+
+-- [ Global Variables ]
+_G.Invis = false
+_G.AntiESP = false
+_G.TargetLag = false
+_G.LagStrength = 5
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- [ UI Tabs ]
+local Main = Window:NewTab("Functions")
+local Visual = Main:NewSection("Stealth & Defense")
+local Troll = Main:NewSection("Target Disruption")
+
+-- [ Stealth & Defense Section ]
+Visual:NewToggle("Full Invisibility", "Character 100% transparent", function(state)
+    _G.Invis = state
+end)
+
+Visual:NewToggle("Anti-ESP Mode", "Break enemy hack targeting", function(state)
+    _G.AntiESP = state
+end)
+
+-- [ Troll Section ]
+Troll:NewToggle("Target Lag (FPS Drop)", "Makes enemies lag", function(state)
+    _G.TargetLag = state
+end)
+
+Troll:NewSlider("Lag Intensity", "Spam strength", 15, 1, function(s)
+    _G.LagStrength = s
+end)
+
+-- [[ CORE LOGIC - MOBILE LIGHTWEIGHT ]]
+
+RunService.Heartbeat:Connect(function()
+    local char = LocalPlayer.Character
+    if char then
+        -- Invisibility & Anti-ESP (Defense)
+        for _, v in pairs(char:GetDescendants()) do
+            if _G.Invis and (v:IsA("BasePart") or v:IsA("Decal")) then
+                v.Transparency = 1
+            end
+            if _G.AntiESP and v:IsA("BasePart") then
+                v.Name = "Mobile_Node_" .. tostring(math.random(100, 999))
+            end
+        end
+    end
+
+    -- Target Lag Logic (Troll)
+    if _G.TargetLag then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.PlayerGui then
+                -- 델타 환경에서 튕기지 않도록 강도를 조절하여 렉 유발
+                for i = 1, _G.LagStrength do
+                    local d = Instance.new("DepthOfFieldEffect", p.PlayerGui)
+                    task.delay(0.1, function() d:Destroy() end)
+                end
+            end
+        end
+    end
+end)
