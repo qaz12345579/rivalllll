@@ -1,0 +1,90 @@
+-- [[ qazqazqaz - NEPTUNE EXTREME V13 ]]
+-- [[ THE ULTIMATE TOWER LOGIC BREAKER ]]
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("qazqazqaz - NEPTUNE", "Midnight")
+
+-- [[ GLOBAL ENGINE STATE ]]
+getgenv().TOWER_POWER = 1500
+getgenv().TOWER_RADIUS = 2500
+getgenv().TOWER_ACTIVE = false
+
+local Main = Window:NewTab("Tower Engine")
+local Section = Main:NewSection("NETWORK DISRUPTION V13")
+
+-- [[ UI CONTROLS ]]
+
+Section:NewToggle("ACTIVATE OVERLOAD", "Starts the packet destruction", function(state)
+    getgenv().TOWER_ACTIVE = state
+end)
+
+Section:NewSlider("PACKET INTENSITY", "Adjust power to bypass server filter", 3000, 100, function(v)
+    getgenv().TOWER_POWER = v
+end)
+
+Section:NewSlider("BROADCAST RADIUS", "Range of the lag aura", 5000, 500, function(v)
+    getgenv().TOWER_RADIUS = v
+end)
+
+-- [[ HIGH-LEVEL LOGIC KERNEL ]]
+
+local RunService = game:GetService("RunService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+
+local function RunPacketBurst()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if hrp and getgenv().TOWER_ACTIVE then
+        -- Bypass Clamping: Using Asynchronous Oscillation
+        -- Forces the server to handle delta-v updates constantly
+        local drift = math.cos(tick() * 30) * (getgenv().TOWER_POWER * 600)
+        hrp.AssemblyLinearVelocity = Vector3.new(drift, 2e7, drift)
+        hrp.AssemblyAngularVelocity = Vector3.new(2e7, 2e7, 2e7)
+        
+        -- High-Priority CFrame Reentrancy
+        -- Shifting 0.05 studs to trigger mandatory client replication
+        local cf = hrp.CFrame
+        hrp.CFrame = cf * CFrame.new(0, 0.05, 0)
+        hrp.CFrame = cf * CFrame.new(0, -0.05, 0)
+        
+        -- Spoof Simulation Radius
+        sethiddenproperty(LocalPlayer, "SimulationRadius", getgenv().TOWER_RADIUS)
+        sethiddenproperty(LocalPlayer, "MaxSimulationRadius", getgenv().TOWER_RADIUS)
+    end
+end
+
+-- Using PostSimulation for final frame packet priority
+RunService.PostSimulation:Connect(function()
+    if getgenv().TOWER_ACTIVE then
+        task.spawn(RunPacketBurst)
+    end
+end)
+
+-- [[ CUSTOM FLOATING MENU BUTTON ]]
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local MenuBtn = Instance.new("TextButton", ScreenGui)
+local UICorner = Instance.new("UICorner", MenuBtn)
+local UIGradient = Instance.new("UIGradient", MenuBtn)
+
+MenuBtn.Name = "qaz_Menu"
+MenuBtn.Size = UDim2.new(0, 140, 0, 45)
+MenuBtn.Position = UDim2.new(0, 10, 0.4, 0)
+MenuBtn.Text = "qazqazqaz"
+MenuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MenuBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MenuBtn.Font = Enum.Font.SpecialElite
+MenuBtn.TextSize = 18
+MenuBtn.Draggable = true
+
+UIGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 0, 0))
+}
+UICorner.CornerRadius = UDim.new(0, 10)
+
+MenuBtn.MouseButton1Click:Connect(function()
+    Library:ToggleUI()
+end)
+
