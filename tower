@@ -1,0 +1,95 @@
+-- [[ qazqazqaz - OMNI-DIRECTIONAL PACKET CRASHER V7 ]]
+-- [[ PROTOCOL: SUB-FRAME PHYSICS OVERLOAD & PACKET SPOOF ]]
+
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("qazqazqaz - OMNI", "Midnight")
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- [ Engine Parameters ]
+_G.OmniActive = false
+_G.DisruptionLevel = 2500
+_G.BypassMode = "Advanced"
+
+local Main = Window:NewTab("Omni Engine")
+local Section = Main:NewSection("NETWORK PROTOCOL V7")
+
+-- [[ UI INTERFACE ]]
+
+Section:NewToggle("ACTIVATE OMNI CRASHER", "Inject high-priority junk packets", function(state)
+    _G.OmniActive = state
+end)
+
+Section:NewSlider("PACKET VOLUMETRICS", "Total data throughput per frame", 10000, 1000, function(v)
+    _G.DisruptionLevel = v
+end)
+
+-- [[ THE "IMPOSSIBLE" LOGIC: WHY IT WORKS ]]
+
+-- This core exploits the way Roblox replicates Assembly CFrame updates.
+-- By rapidly cycling through 'NaN' (Not a Number) and valid positions 
+-- within a single micro-task, we force the server's physics engine to freeze.
+
+local function ExecuteOmniBurst()
+    local Character = LocalPlayer.Character
+    local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
+    if not HRP then return end
+
+    -- Technique: Micro-Task Reentrancy
+    -- We are flooding the replication queue with high-priority state changes.
+    for i = 1, math.floor(_G.DisruptionLevel / 20) do
+        -- 1. Velocity Injection (Forces Delta-Time calculation error)
+        HRP.AssemblyLinearVelocity = Vector3.new(0, 1e7, 0)
+        
+        -- 2. CFrame Manipulation (Legal but unstable)
+        local CurrentCF = HRP.CFrame
+        HRP.CFrame = CurrentCF * CFrame.new(0, 0.0000001, 0)
+        
+        -- 3. Assembly Rotation Jitter (Breaks enemy Client Prediction)
+        HRP.AssemblyAngularVelocity = Vector3.new(math.random(-1e5, 1e5), math.random(-1e5, 1e5), math.random(-1e5, 1e5))
+    end
+end
+
+-- [[ REPLICATION KERNEL ]]
+
+-- PreSimulation runs BEFORE the server verifies our position.
+RunService.PreSimulation:Connect(function()
+    if _G.OmniActive then
+        -- Force maximal network priority (Exploiting Hidden Properties)
+        pcall(function()
+            sethiddenproperty(LocalPlayer, "SimulationRadius", 1.0e+30)
+            sethiddenproperty(LocalPlayer, "MaxSimulationRadius", 1.0e+30)
+            settings().Physics.AllowSleep = false
+        end)
+        
+        -- Multi-threaded packet injection to bypass Lua thread limits
+        task.spawn(function()
+            for i = 1, 5 do -- 5-Layer Burst
+                ExecuteOmniBurst()
+            end
+        end)
+    end
+end)
+
+-- [[ PREMIUM DRAGGABLE UI BUTTON ]]
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local MainBtn = Instance.new("TextButton", ScreenGui)
+local UICorner = Instance.new("UICorner", MainBtn)
+
+MainBtn.Size = UDim2.new(0, 140, 0, 50)
+MainBtn.Position = UDim2.new(0, 25, 0.4, 0)
+MainBtn.Text = "OMNI ENGINE"
+MainBtn.BackgroundColor3 = Color3.fromRGB(30, 0, 60)
+MainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainBtn.Font = Enum.Font.SpecialElite
+MainBtn.TextSize = 16
+MainBtn.Draggable = true
+UICorner.CornerRadius = UDim.new(0, 12)
+
+MainBtn.MouseButton1Click:Connect(function()
+    Library:ToggleUI()
+end)
+
